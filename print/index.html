@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>College Printing Shop</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .document-field {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to the College Printing Shop</h1>
+        <p>How many documents do you want to upload?</p>
+        <input type="number" id="documentCount" min="1" placeholder="Enter a number">
+        <br><br>
+        <div id="documentFields"></div>
+        <br>
+        <button onclick="createDocumentFields()">Create Document Fields</button>
+        <br><br>
+        <button onclick="calculateTotalPages()">Calculate Total Pages</button>
+        <br><br>
+        <p id="totalPages">Total Pages: Not yet calculated</p>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.js"></script>
+    <script>
+        async function readPdfPageCount(file) {
+            const pdfData = new Uint8Array(await file.arrayBuffer());
+            const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
+            return pdf.numPages;
+        }
+
+        function createDocumentFields() {
+            const documentCount = parseInt(document.getElementById("documentCount").value);
+
+            if (isNaN(documentCount) || documentCount <= 0) {
+                alert("Please enter a valid number greater than 0.");
+                return;
+            }
+
+            const documentFieldsDiv = document.getElementById("documentFields");
+            documentFieldsDiv.innerHTML = '';
+
+            for (let i = 1; i <= documentCount; i++) {
+                const documentFieldDiv = document.createElement("div");
+                documentFieldDiv.className = "document-field";
+                
+                documentFieldDiv.innerHTML = `
+                    <p>Document ${i}:</p>
+                    <input type="file" id="fileInput${i}" name="pdf${i}" multiple required>
+                    <br>
+                    <p id="pageCount${i}">Number of Pages: Not yet determined</p>
+                    <br>
+                    <label for="colorPages${i}">Number of Color Pages:</label>
+                    <input type="number" id="colorPages${i}" name="colorPages${i}" min="0">
+                    <br>
+                    <label for="colorPageNumbers${i}">Page Numbers for Color Pages:</label>
+                    <input type="text" id="colorPageNumbers${i}" name="colorPageNumbers${i}">
+                    <br>
+                    <label for="bwPages${i}">Number of B&W Pages:</label>
+                    <input type="number" id="bwPages${i}" name="bwPages${i}" min="0">
+                    <br>
+                    <label for="bwPageNumbers${i}">Page Numbers for B&W Pages:</label>
+                    <input type="text" id="bwPageNumbers${i}" name="bwPageNumbers${i}">
+                    <br>
+                    <label for="options${i}">Options:</label>
+                    <select id="options${i}" name="options${i}">
+                        <option value="colorFirst">First page color, others B&W</option>
+                        <option value="allColor">All pages are color</option>
+                        <option value="allBW">All pages are B&W</option>
+                    </select>
+                    <br>
+                    <label for="softbind${i}">Softbind needed:</label>
+                    <input type="checkbox" id="softbind${i}" name="softbind${i}">
+                    <br>
+                    <label for="backToBack${i}">Back to Back Print needed:</label>
+                    <input type="checkbox" id="backToBack${i}" name="backToBack${i}">
+                    <br>
+                `;
+
+                documentFieldsDiv.appendChild(documentFieldDiv);
+            }
+        }
+
+        async function calculateTotalPages() {
+            const documentCount = parseInt(document.getElementById("documentCount").value);
+            let totalPages = 0;
+
+            if (isNaN(documentCount) || documentCount <= 0) {
+                alert("Please enter a valid number greater than 0.");
+                return;
+            }
+
+            for (let i = 1; i <= documentCount; i++) {
+                const fileInput = document.getElementById(`fileInput${i}`);
+                const pageCount = await readPdfPageCount(fileInput.files[0]);
+                totalPages += pageCount;
+
+                const pageCountElement = document.getElementById(`pageCount${i}`);
+                pageCountElement.textContent = `Number of Pages: ${pageCount}`;
+            }
+
+            const totalPagesElement = document.getElementById("totalPages");
+            totalPagesElement.textContent = `Total Pages: ${totalPages}`;
+        }
+    </script>
+</body>
+</html>
